@@ -1,12 +1,15 @@
 import React from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 
 export default function Navbar() {
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+  
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm fixed-top">
       <div className="container">
         {/* Título principal */}
-        <Link className="navbar-brand fw-bold" to="/">
+        <Link className="navbar-brand fs-3 fw-bold" to="/">
           Biblioteca Municipal
         </Link>
 
@@ -27,30 +30,32 @@ export default function Navbar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <NavLink className="nav-link" to="/libros">
+              <NavLink className="nav-link fs-5" to="/libros">
                 Libros
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink className="nav-link" to="/socios">
+              <NavLink className="nav-link fs-5" to="/socios">
                 Socios
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink className="nav-link" to="/prestamos">
+              <NavLink className="nav-link fs-5" to="/prestamos">
                 Préstamos
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink className="nav-link" to="/multas">
+              <NavLink className="nav-link fs-5" to="/multas">
                 Multas
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink className="nav-link text-warning fw-semibold" to="/">
-                Salir
-              </NavLink>
-            </li>
+            {!isHomePage && (
+              <li className="nav-item">
+                <NavLink className="nav-link text-warning fw-semibold fs-5" to="/">
+                  Salir
+                </NavLink>
+              </li>
+            )}
           </ul>
         </div>
       </div>

@@ -51,7 +51,20 @@ h1, h2, h3, h4, h5 {
 /* Enlaces activos en Navbar */
 .nav-link.active {
   font-weight: 600;
-  text-decoration: underline;
+}
+
+.navbar {
+  background-color: #007bff;
+}
+
+.nav-link {
+  color: white !important;
+  transition: 0.3s;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: #d0e4ff !important; /* azul clarito al pasar el mouse */
 }
 
 /* Tablas */
@@ -71,14 +84,33 @@ h1, h2, h3, h4, h5 {
 /* Margen de compensación por navbar fija */
 main {
   padding-top: 80px;
+  padding-bottom: 60px;
 }
 
 /* Footer institucional opcional */
-.footer {
-  background-color: #0d6efd;
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #007bff;
   color: white;
   text-align: center;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  margin-top: 2rem;
+  padding: 10px 0;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+/* --- Centrar verticalmente el contenido principal --- */
+main {
+  min-height: calc(100vh - 120px); /* ocupa toda la pantalla menos navbar + footer */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- Quitar margen extra del body --- */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-y: hidden; /* evita que aparezca el scroll */
 }
