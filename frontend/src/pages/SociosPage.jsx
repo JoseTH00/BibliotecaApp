@@ -1,0 +1,226 @@
+import React, { useEffect, useState } from "react";
+import api from ".../services/api";
+
+export default function SociosPage() {
+  const [socios, setSocios] = useState([]);
+  const [formData, setFormData] = useState({
+    nombre: "",
+    dni: "",
+    numeroSocio: "",
+    email: "",
+    telefono: "",
+  });
+  const [editando, setEditando] = useState(false);
+  const [socioEditado, setSocioEditado] = useState(null);
+
+  useEffect(() => {
+    cargarSocios();
+  }, []);
+
+  const cargarSocios = async () => {
+    try {
+      const res = await api.get("socios");
+      setSocios(res.data);
+    } catch (error) {
+      console.error("Error al cargar socios:", error);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editando) {
+        await api.put(`socios/${socioEditado.idSocio}`, formData);
+      } else {
+        await api.post("socios", formData);
+      }
+
+      setFormData({
+        nombre: "",
+        dni: "",
+        numeroSocio: "",
+        email: "",
+        telefono: "",
+      });
+      setEditando(false);
+      setSocioEditado(null);
+      cargarSocios();
+    } catch (error) {
+      alert("Error al guardar el socio");
+      console.error(error);
+    }
+  };
+
+  const handleEdit = (socio) => {
+    setEditando(true);
+    setSocioEditado(socio);
+    setFormData({
+      nombre: socio.nombre,
+      dni: socio.dni,
+      numeroSocio: socio.numeroSocio,
+      email: socio.email,
+      telefono: socio.telefono,
+    });
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("¿Seguro que deseas eliminar este socio?")) {
+      try {
+        await api.delete(`socios/${id}`);
+        cargarSocios();
+      } catch (error) {
+        alert("Error al eliminar el socio");
+        console.error(error);
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    setEditando(false);
+    setSocioEditado(null);
+    setFormData({
+      nombre: "",
+      dni: "",
+      numeroSocio: "",
+      email: "",
+      telefono: "",
+    });
+  };
+
+  return (
+    <div className="container py-4">
+      <h2 className="mb-4 text-center">👥 Gestión de Socios</h2>
+
+      {/* Formulario */}
+      <div className="card shadow p-4 mb-4">
+        <h5 className="mb-3">
+          {editando ? "✏️ Editar Socio" : "➕ Registrar Nuevo Socio"}
+        </h5>
+        <form onSubmit={handleSubmit} className="row g-3">
+          <div className="col-md-4">
+            <label className="form-label">Nombre</label>
+            <input
+              type="text"
+              name="nombre"
+              className="form-control"
+              value={formData.nombre}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">DNI</label>
+            <input
+              type="text"
+              name="dni"
+              className="form-control"
+              value={formData.dni}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-4">
+            <label className="form-label">Número de Socio</label>
+            <input
+              type="text"
+              name="numeroSocio"
+              className="form-control"
+              value={formData.numeroSocio}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Teléfono</label>
+            <input
+              type="text"
+              name="telefono"
+              className="form-control"
+              value={formData.telefono}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="col-12 text-end">
+            <button type="submit" className="btn btn-success me-2">
+              {editando ? "Guardar Cambios" : "Registrar Socio"}
+            </button>
+            {editando && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleCancel}
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* Listado */}
+      <div className="card shadow p-4">
+        <h5 className="mb-3">📋 Lista de Socios</h5>
+        {socios.length === 0 ? (
+          <p className="text-muted">No hay socios registrados.</p>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-striped align-middle">
+              <thead className="table-primary">
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>DNI</th>
+                  <th>Número Socio</th>
+                  <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {socios.map((socio) => (
+                  <tr key={socio.idSocio}>
+                    <td>{socio.idSocio}</td>
+                    <td>{socio.nombre}</td>
+                    <td>{socio.dni}</td>
+                    <td>{socio.numeroSocio}</td>
+                    <td>{socio.email || "-"}</td>
+                    <td>{socio.telefono || "-"}</td>
+                    <td>
+                      <button
+                        onClick={() => handleEdit(socio)}
+                        className="btn btn-sm btn-outline-primary me-2"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(socio.idSocio)}
+                        className="btn btn-sm btn-outline-danger"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
