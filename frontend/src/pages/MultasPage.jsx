@@ -10,9 +10,7 @@ export default function MultasPage() {
     monto: "",
     fecha: "",
   });
-  const [editando, setEditando] = useState(false);
-  const [multaEditada, setMultaEditada] = useState(null);
-  const [mensaje, setMensaje] = useState(null); // { tipo, texto }
+  const [mensaje, setMensaje] = useState(null);
 
   useEffect(() => {
     cargarDatos();
@@ -24,16 +22,20 @@ export default function MultasPage() {
   };
 
   const cargarDatos = async () => {
+  try {
+    // primero cargamos socios, así siempre aparecen
+    const resSocios = await api.get("socios");
+    setSocios(resSocios.data);
+    // luego intentamos cargar multas, pero sin bloquear el resto
     try {
-      const [resMultas, resSocios] = await Promise.all([
-        api.get("multas"),
-        api.get("socios"),
-      ]);
+      const resMultas = await api.get("multas");
       setMultas(resMultas.data);
-      setSocios(resSocios.data);
+    } catch (errMultas) {
+      console.warn("No se pudieron cargar multas:", errMultas);
+      setMultas([]); // evita errores si el backend devuelve vacío
+    }
     } catch (error) {
-      mostrarMensaje("Error al cargar datos", "danger");
-      console.error("Error al cargar datos:", error);
+    console.error("Error al cargar datos:", error);
     }
   };
 
@@ -44,78 +46,43 @@ export default function MultasPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editando) {
-        await api.put(`multas/${multaEditada.idMulta}`, formData);
-        mostrarMensaje("Multa actualizada correctamente ✅", "success");
-      } else {
-        await api.post("multas", formData);
-        mostrarMensaje("Multa registrada correctamente ✅", "success");
-      }
-
+      await api.post("multas", formData);
+      mostrarMensaje("Multa registrada correctamente ✅", "success");
       setFormData({ idSocio: "", motivo: "", monto: "", fecha: "" });
-      setEditando(false);
-      setMultaEditada(null);
       cargarDatos();
     } catch (error) {
-      const texto =
-        error.response?.data?.error || "Error al guardar la multa";
+      const texto = error.response?.data?.error || "Error al registrar la multa";
       mostrarMensaje(texto, "danger");
-      console.error("Error en guardar multa:", error);
+      console.error(error);
     }
   };
 
-  const handleEdit = (multa) => {
-    setEditando(true);
-    setMultaEditada(multa);
-    setFormData({
-      idSocio: multa.idSocio,
-      motivo: multa.motivo,
-      monto: multa.monto,
-      fecha: multa.fecha,
-    });
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Seguro que deseas eliminar esta multa?")) {
+  const cancelarMulta = async (idMulta) => {
+    if (window.confirm("¿Confirmar cancelación de esta multa?")) {
       try {
-        await api.delete(`multas/${id}`);
-        mostrarMensaje("Multa eliminada correctamente 🗑️", "warning");
+        await api.put(`multas/${idMulta}/cancelar`);
+        mostrarMensaje("Multa cancelada correctamente 🟢", "success");
         cargarDatos();
       } catch (error) {
-        const texto =
-          error.response?.data?.error || "Error al eliminar la multa";
+        const texto = error.response?.data?.error || "Error al cancelar la multa";
         mostrarMensaje(texto, "danger");
-        console.error("Error al eliminar multa:", error);
+        console.error(error);
       }
     }
-  };
-
-  const handleCancel = () => {
-    setEditando(false);
-    setMultaEditada(null);
-    setFormData({ idSocio: "", motivo: "", monto: "", fecha: "" });
-    mostrarMensaje("Edición cancelada", "secondary");
   };
 
   return (
     <div className="container py-4">
       <h2 className="text-center mb-4">⚠️ Gestión de Multas</h2>
 
-      {/* Mensaje dinámico */}
       {mensaje && (
-        <div
-          className={`alert alert-${mensaje.tipo} text-center fw-semibold`}
-          role="alert"
-        >
+        <div className={`alert alert-${mensaje.tipo} text-center fw-semibold`}>
           {mensaje.texto}
         </div>
       )}
 
-      {/* Formulario */}
       <div className="card shadow p-4 mb-4">
-        <h5 className="mb-3">
-          {editando ? "✏️ Editar Multa" : "➕ Registrar Nueva Multa"}
-        </h5>
+        <h5 className="mb-3">Registrar Nueva Multa</h5>
         <form onSubmit={handleSubmit} className="row g-3">
           <div className="col-md-3">
             <label className="form-label">Socio</label>
@@ -172,27 +139,17 @@ export default function MultasPage() {
           </div>
 
           <div className="col-12 text-end">
-            <button type="submit" className="btn btn-success me-2">
-              {editando ? "Guardar Cambios" : "Registrar Multa"}
+            <button type="submit" className="btn btn-success">
+              Registrar Multa
             </button>
-            {editando && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleCancel}
-              >
-                Cancelar
-              </button>
-            )}
           </div>
         </form>
       </div>
 
-      {/* Listado */}
       <div className="card shadow p-4">
-        <h5 className="mb-3">📋 Lista de Multas</h5>
+        <h5 className="mb-3">📋 Lista de Multas Activas</h5>
         {multas.length === 0 ? (
-          <p className="text-muted">No hay multas registradas.</p>
+          <p className="text-muted">No hay multas activas.</p>
         ) : (
           <div className="table-responsive">
             <table className="table table-striped align-middle">
@@ -203,6 +160,7 @@ export default function MultasPage() {
                   <th>Motivo</th>
                   <th>Monto</th>
                   <th>Fecha</th>
+                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -210,22 +168,27 @@ export default function MultasPage() {
                 {multas.map((m) => (
                   <tr key={m.idMulta}>
                     <td>{m.idMulta}</td>
-                    <td>{m.Socio?.nombre || "-"}</td>
+                    <td>{m.Socio?.nombre}</td>
                     <td>{m.motivo}</td>
-                    <td>${m.monto}</td>
+                    <td>${parseFloat(m.monto).toFixed(2)}</td>
                     <td>{m.fecha}</td>
                     <td>
+                    <span
+                      className={
+                        m.estado === "ACTIVA"
+                          ? "badge bg-warning text-dark"
+                          : "badge bg-success"
+                      }
+                    >
+                      {m.estado}
+                    </span>
+                    </td>
+                    <td>
                       <button
-                        onClick={() => handleEdit(m)}
-                        className="btn btn-sm btn-outline-primary me-2"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(m.idMulta)}
+                        onClick={() => cancelarMulta(m.idMulta)}
                         className="btn btn-sm btn-outline-danger"
                       >
-                        Eliminar
+                        Cancelar Multa
                       </button>
                     </td>
                   </tr>

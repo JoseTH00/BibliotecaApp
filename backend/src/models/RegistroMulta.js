@@ -1,23 +1,28 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
-import { Prestamo } from "./Prestamo.js";
+import { Socio } from "./Socio.js";
 
 export const RegistroMulta = sequelize.define("RegistroMulta", {
   idMulta: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  idPrestamo: { type: DataTypes.INTEGER, allowNull: false },
-  monto: { type: DataTypes.DECIMAL(10,2), allowNull: false },
-  descripcion: { type: DataTypes.STRING },
-  fecha: { type: DataTypes.DATEONLY, defaultValue: DataTypes.NOW },
+  motivo: { type: DataTypes.STRING, allowNull: false },
+  monto: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  fecha: { type: DataTypes.DATEONLY, allowNull: false },
+  estado: { type: DataTypes.ENUM("ACTIVA", "PAGADA"), defaultValue: "ACTIVA" },
+  // 👇 esta es la columna que falta
+  idSocio: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: Socio, key: "idSocio" },
+  },
 }, {
   timestamps: false,
 });
 
-// Relación con Prestamo
-Prestamo.hasMany(RegistroMulta, {
-  foreignKey: "idPrestamo",
+// Relaciones
+Socio.hasMany(RegistroMulta, {
+  foreignKey: "idSocio",
   onDelete: "CASCADE",
-  onUpdate: "CASCADE"
+  onUpdate: "CASCADE",
 });
-RegistroMulta.belongsTo(Prestamo, {
-  foreignKey: "idPrestamo"
-});
+
+RegistroMulta.belongsTo(Socio, { foreignKey: "idSocio" });

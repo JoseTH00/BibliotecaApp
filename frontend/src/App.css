@@ -50,7 +50,7 @@ h1, h2, h3, h4, h5 {
 
 /* Enlaces activos en Navbar */
 .nav-link.active {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .navbar {

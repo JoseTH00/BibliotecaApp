@@ -1,19 +1,36 @@
 import { RegistroMulta } from "../models/RegistroMulta.js";
+import { Socio } from "../models/Socio.js";
 
 export const obtenerMultas = async () => {
-  return await RegistroMulta.findAll();
+  return await RegistroMulta.findAll({
+    where: { estado: "ACTIVA" }, // 🔹 corregido aquí
+    include: [{ model: Socio, attributes: ["idSocio", "nombre", "numeroSocio"] }],
+    order: [["fecha", "DESC"], ["idMulta", "DESC"]],
+  });
 };
 
-export const obtenerMultaPorId = async (id) => {
-  const multa = await RegistroMulta.findByPk(id);
-  if (!multa) throw new Error("Multa no encontrada");
+export const crearMulta = async ({ idSocio, motivo, monto, fecha }) => {
+  if (!idSocio || !motivo || !monto || !fecha) {
+    throw new Error("Datos incompletos para registrar la multa");
+  }
+
+  const multa = await RegistroMulta.create({
+    idSocio,
+    motivo,
+    monto: parseFloat(monto),
+    fecha,
+    estado: "ACTIVA", // 🔹 también corregido aquí
+  });
+
   return multa;
 };
 
-export const generarAviso = (multa) => {
-  return `Aviso: multa de $${multa.monto} registrada el ${multa.fecha}`;
-};
+export const cancelarMulta = async (idMulta) => {
+  const multa = await RegistroMulta.findByPk(idMulta);
+  if (!multa) throw new Error("Multa no encontrada");
 
-export const calcularMontoRetraso = (dias) => {
-  return dias * 100;
+  multa.estado = "PAGADA"; // 🔹 y aquí
+  await multa.save();
+
+  return { msg: "Multa cancelada correctamente" };
 };

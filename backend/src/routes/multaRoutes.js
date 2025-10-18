@@ -1,12 +1,15 @@
 import express from "express";
-import {
-  getMultas,
-  getMultaById,
-} from "../controllers/multaController.js";
+import { getMultas, crearMulta, cancelarMulta } from "../controllers/multaController.js";
 
 const router = express.Router();
 
+// Listar multas activas
 router.get("/", getMultas);
-router.get("/:id", getMultaById);
+
+// Crear nueva multa
+router.post("/", crearMulta);
+
+// Cancelar multa
+router.put("/:idMulta/cancelar", cancelarMulta);
 
 export default router;

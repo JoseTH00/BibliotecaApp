@@ -9,12 +9,21 @@ export const getMultas = async (req, res) => {
   }
 };
 
-export const getMultaById = async (req, res) => {
+export const crearMulta = async (req, res) => {
   try {
-    const { id } = req.params;
-    const multa = await MultaService.obtenerMultaPorId(id);
-    res.json(multa);
+    const multa = await MultaService.crearMulta(req.body);
+    res.status(201).json({ msg: "Multa registrada correctamente", multa });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const cancelarMulta = async (req, res) => {
+  try {
+    const { idMulta } = req.params;
+    const resultado = await MultaService.cancelarMulta(idMulta);
+    res.json(resultado);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 };
