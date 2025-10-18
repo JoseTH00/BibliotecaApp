@@ -21,12 +21,23 @@ export const getSocioById = async (req, res) => {
   }
 };
 
-// Crear nuevo socio
+// Crear nuevo socio 
 export const crearSocio = async (req, res) => {
   try {
-    const socio = await SocioService.registrarSocio(req.body);
-    res.status(201).json({ msg: "Socio registrado correctamente", socio });
+    const { nombre, dni, email, telefono } = req.body;
+
+    // Validaciones básicas
+    if (!nombre || !dni) {
+      return res.status(400).json({ error: "El nombre y el DNI son obligatorios" });
+    }
+
+    const socio = await SocioService.registrarSocio({ nombre, dni, email, telefono });
+    res.status(201).json({
+      msg: "Socio registrado correctamente",
+      socio,
+    });
   } catch (error) {
+    console.error("Error en crearSocio:", error);
     res.status(400).json({ error: error.message });
   }
 };

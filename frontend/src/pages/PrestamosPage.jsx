@@ -11,10 +11,16 @@ export default function PrestamosPage() {
     fechaInicio: "",
     fechaDevolucion: "",
   });
+  const [mensaje, setMensaje] = useState(null);
 
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  const mostrarMensaje = (texto, tipo = "info") => {
+    setMensaje({ texto, tipo });
+    setTimeout(() => setMensaje(null), 4000);
+  };
 
   const cargarDatos = async () => {
     try {
@@ -27,24 +33,23 @@ export default function PrestamosPage() {
       setSocios(resSocios.data);
       setLibros(resLibros.data.filter((l) => l.estado === "DISPONIBLE"));
     } catch (error) {
-      console.error("Error al cargar datos:", error);
+      mostrarMensaje("Error al cargar datos", "danger");
+      console.error(error);
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await api.post("prestamos", formData);
-      alert("Préstamo registrado correctamente");
+      mostrarMensaje("Préstamo registrado correctamente ✅", "success");
       setFormData({ idSocio: "", idLibro: "", fechaInicio: "", fechaDevolucion: "" });
       cargarDatos();
     } catch (error) {
-      alert("Error al registrar el préstamo");
-      console.error(error);
+      const texto = error.response?.data?.error || "Error al registrar préstamo";
+      mostrarMensaje(texto, "danger");
     }
   };
 
@@ -52,11 +57,11 @@ export default function PrestamosPage() {
     if (window.confirm("¿Confirmar devolución del libro?")) {
       try {
         await api.put(`prestamos/${idPrestamo}/devolver`);
-        alert("Devolución registrada correctamente");
+        mostrarMensaje("Devolución registrada correctamente 📗", "success");
         cargarDatos();
       } catch (error) {
-        alert("Error al registrar devolución");
-        console.error(error);
+        const texto = error.response?.data?.error || "Error al registrar devolución";
+        mostrarMensaje(texto, "danger");
       }
     }
   };
@@ -65,19 +70,18 @@ export default function PrestamosPage() {
     <div className="container py-4">
       <h2 className="text-center mb-4">🔁 Gestión de Préstamos</h2>
 
-      {/* Formulario de préstamo */}
+      {mensaje && (
+        <div className={`alert alert-${mensaje.tipo} text-center fw-semibold`} role="alert">
+          {mensaje.texto}
+        </div>
+      )}
+
       <div className="card shadow p-4 mb-4">
         <h5 className="mb-3">📘 Registrar Nuevo Préstamo</h5>
         <form onSubmit={handleSubmit} className="row g-3">
           <div className="col-md-3">
             <label className="form-label">Socio</label>
-            <select
-              name="idSocio"
-              className="form-select"
-              value={formData.idSocio}
-              onChange={handleChange}
-              required
-            >
+            <select name="idSocio" className="form-select" value={formData.idSocio} onChange={handleChange} required>
               <option value="">Seleccione un socio...</option>
               {socios.map((s) => (
                 <option key={s.idSocio} value={s.idSocio}>
@@ -86,16 +90,9 @@ export default function PrestamosPage() {
               ))}
             </select>
           </div>
-
           <div className="col-md-3">
             <label className="form-label">Libro</label>
-            <select
-              name="idLibro"
-              className="form-select"
-              value={formData.idLibro}
-              onChange={handleChange}
-              required
-            >
+            <select name="idLibro" className="form-select" value={formData.idLibro} onChange={handleChange} required>
               <option value="">Seleccione un libro...</option>
               {libros.map((l) => (
                 <option key={l.idLibro} value={l.idLibro}>
@@ -104,44 +101,24 @@ export default function PrestamosPage() {
               ))}
             </select>
           </div>
-
           <div className="col-md-3">
             <label className="form-label">Fecha Inicio</label>
-            <input
-              type="date"
-              name="fechaInicio"
-              className="form-control"
-              value={formData.fechaInicio}
-              onChange={handleChange}
-              required
-            />
+            <input type="date" name="fechaInicio" className="form-control" value={formData.fechaInicio} onChange={handleChange} required />
           </div>
-
           <div className="col-md-3">
             <label className="form-label">Fecha Devolución</label>
-            <input
-              type="date"
-              name="fechaDevolucion"
-              className="form-control"
-              value={formData.fechaDevolucion}
-              onChange={handleChange}
-              required
-            />
+            <input type="date" name="fechaDevolucion" className="form-control" value={formData.fechaDevolucion} onChange={handleChange} required />
           </div>
-
           <div className="col-12 text-end">
-            <button type="submit" className="btn btn-success">
-              Registrar Préstamo
-            </button>
+            <button type="submit" className="btn btn-success">Registrar Préstamo</button>
           </div>
         </form>
       </div>
 
-      {/* Listado de préstamos */}
       <div className="card shadow p-4">
-        <h5 className="mb-3">📖 Lista de Préstamos</h5>
+        <h5 className="mb-3">📖 Lista de Préstamos Activos</h5>
         {prestamos.length === 0 ? (
-          <p className="text-muted">No hay préstamos registrados.</p>
+          <p className="text-muted">No hay préstamos activos.</p>
         ) : (
           <div className="table-responsive">
             <table className="table table-striped align-middle">
@@ -152,7 +129,6 @@ export default function PrestamosPage() {
                   <th>Libro</th>
                   <th>Fecha Inicio</th>
                   <th>Fecha Devolución</th>
-                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -165,25 +141,9 @@ export default function PrestamosPage() {
                     <td>{p.fechaInicio}</td>
                     <td>{p.fechaDevolucion}</td>
                     <td>
-                      <span
-                        className={
-                          p.devuelto
-                            ? "badge bg-success"
-                            : "badge bg-warning text-dark"
-                        }
-                      >
-                        {p.devuelto ? "Devuelto" : "En préstamo"}
-                      </span>
-                    </td>
-                    <td>
-                      {!p.devuelto && (
-                        <button
-                          onClick={() => registrarDevolucion(p.idPrestamo)}
-                          className="btn btn-sm btn-outline-success"
-                        >
-                          Registrar Devolución
-                        </button>
-                      )}
+                      <button onClick={() => registrarDevolucion(p.idPrestamo)} className="btn btn-sm btn-outline-success">
+                        Registrar Devolución
+                      </button>
                     </td>
                   </tr>
                 ))}

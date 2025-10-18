@@ -1,15 +1,10 @@
 import express from "express";
-import {
-  crearPrestamo,
-  devolverLibro,
-} from "../controllers/prestamoController.js";
+import { obtenerPrestamos, crearPrestamo, devolverLibro } from "../controllers/prestamoController.js";
 
 const router = express.Router();
 
-// Registrar préstamo
+router.get("/", obtenerPrestamos);
 router.post("/", crearPrestamo);
-
-// Devolver libro y calcular multa (si corresponde)
-router.put("/devolver/:idPrestamo", devolverLibro);
+router.put("/:idPrestamo/devolver", devolverLibro);
 
 export default router;

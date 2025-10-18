@@ -1,14 +1,16 @@
 import { Socio } from "../models/Socio.js";
 
-// Crear socio
+// Crear socio (sin pedir número de socio manualmente)
 export const registrarSocio = async (datos) => {
-  const { dni, numeroSocio, nombre, email, telefono } = datos;
-  if (!dni || !numeroSocio || !nombre) throw new Error("Datos incompletos");
+  const { dni, nombre, email, telefono } = datos;
+  if (!dni || !nombre) throw new Error("Datos incompletos");
 
+  // Verificar si ya existe un socio con el mismo DNI
   const existe = await Socio.findOne({ where: { dni } });
   if (existe) throw new Error("El socio ya está registrado");
 
-  const socio = await Socio.create({ dni, numeroSocio, nombre, email, telefono });
+  // Crear socio: el número se genera automáticamente por el hook beforeCreate
+  const socio = await Socio.create({ dni, nombre, email, telefono });
   return socio;
 };
 

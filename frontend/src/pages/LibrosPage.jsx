@@ -6,17 +6,24 @@ export default function LibrosPage() {
   const [formData, setFormData] = useState({ titulo: "", autor: "", isbn: "" });
   const [editando, setEditando] = useState(false);
   const [libroEditado, setLibroEditado] = useState(null);
+  const [mensaje, setMensaje] = useState(null); // { tipo, texto }
 
   // Cargar libros al iniciar
   useEffect(() => {
     cargarLibros();
   }, []);
 
+  const mostrarMensaje = (texto, tipo = "info") => {
+    setMensaje({ texto, tipo });
+    setTimeout(() => setMensaje(null), 4000);
+  };
+
   const cargarLibros = async () => {
     try {
       const res = await api.get("libros");
       setLibros(res.data);
     } catch (error) {
+      mostrarMensaje("Error al cargar libros", "danger");
       console.error("Error al cargar libros:", error);
     }
   };
@@ -27,12 +34,13 @@ export default function LibrosPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       if (editando) {
         await api.put(`libros/${libroEditado.idLibro}`, formData);
+        mostrarMensaje("Libro actualizado correctamente ✅", "success");
       } else {
         await api.post("libros", formData);
+        mostrarMensaje("Libro agregado correctamente ✅", "success");
       }
 
       setFormData({ titulo: "", autor: "", isbn: "" });
@@ -40,8 +48,10 @@ export default function LibrosPage() {
       setLibroEditado(null);
       cargarLibros();
     } catch (error) {
-      alert("Error al guardar el libro");
-      console.error(error);
+      const texto =
+        error.response?.data?.error || "Error al guardar el libro";
+      mostrarMensaje(texto, "danger");
+      console.error("Error en guardar libro:", error);
     }
   };
 
@@ -59,10 +69,13 @@ export default function LibrosPage() {
     if (window.confirm("¿Seguro que deseas eliminar este libro?")) {
       try {
         await api.delete(`libros/${id}`);
+        mostrarMensaje("Libro eliminado correctamente 🗑️", "warning");
         cargarLibros();
       } catch (error) {
-        alert("Error al eliminar el libro");
-        console.error(error);
+        const texto =
+          error.response?.data?.error || "Error al eliminar el libro";
+        mostrarMensaje(texto, "danger");
+        console.error("Error al eliminar libro:", error);
       }
     }
   };
@@ -71,11 +84,22 @@ export default function LibrosPage() {
     setEditando(false);
     setLibroEditado(null);
     setFormData({ titulo: "", autor: "", isbn: "" });
+    mostrarMensaje("Edición cancelada", "secondary");
   };
 
   return (
     <div className="container py-4">
       <h2 className="mb-4 text-center">📚 Gestión de Libros</h2>
+
+      {/* Mensaje dinámico */}
+      {mensaje && (
+        <div
+          className={`alert alert-${mensaje.tipo} text-center fw-semibold`}
+          role="alert"
+        >
+          {mensaje.texto}
+        </div>
+      )}
 
       {/* Formulario */}
       <div className="card shadow p-4 mb-4">

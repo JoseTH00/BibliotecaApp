@@ -12,10 +12,16 @@ export default function MultasPage() {
   });
   const [editando, setEditando] = useState(false);
   const [multaEditada, setMultaEditada] = useState(null);
+  const [mensaje, setMensaje] = useState(null); // { tipo, texto }
 
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  const mostrarMensaje = (texto, tipo = "info") => {
+    setMensaje({ texto, tipo });
+    setTimeout(() => setMensaje(null), 4000);
+  };
 
   const cargarDatos = async () => {
     try {
@@ -26,6 +32,7 @@ export default function MultasPage() {
       setMultas(resMultas.data);
       setSocios(resSocios.data);
     } catch (error) {
+      mostrarMensaje("Error al cargar datos", "danger");
       console.error("Error al cargar datos:", error);
     }
   };
@@ -36,12 +43,13 @@ export default function MultasPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       if (editando) {
         await api.put(`multas/${multaEditada.idMulta}`, formData);
+        mostrarMensaje("Multa actualizada correctamente ✅", "success");
       } else {
         await api.post("multas", formData);
+        mostrarMensaje("Multa registrada correctamente ✅", "success");
       }
 
       setFormData({ idSocio: "", motivo: "", monto: "", fecha: "" });
@@ -49,8 +57,10 @@ export default function MultasPage() {
       setMultaEditada(null);
       cargarDatos();
     } catch (error) {
-      alert("Error al guardar la multa");
-      console.error(error);
+      const texto =
+        error.response?.data?.error || "Error al guardar la multa";
+      mostrarMensaje(texto, "danger");
+      console.error("Error en guardar multa:", error);
     }
   };
 
@@ -69,10 +79,13 @@ export default function MultasPage() {
     if (window.confirm("¿Seguro que deseas eliminar esta multa?")) {
       try {
         await api.delete(`multas/${id}`);
+        mostrarMensaje("Multa eliminada correctamente 🗑️", "warning");
         cargarDatos();
       } catch (error) {
-        alert("Error al eliminar la multa");
-        console.error(error);
+        const texto =
+          error.response?.data?.error || "Error al eliminar la multa";
+        mostrarMensaje(texto, "danger");
+        console.error("Error al eliminar multa:", error);
       }
     }
   };
@@ -81,11 +94,22 @@ export default function MultasPage() {
     setEditando(false);
     setMultaEditada(null);
     setFormData({ idSocio: "", motivo: "", monto: "", fecha: "" });
+    mostrarMensaje("Edición cancelada", "secondary");
   };
 
   return (
     <div className="container py-4">
       <h2 className="text-center mb-4">⚠️ Gestión de Multas</h2>
+
+      {/* Mensaje dinámico */}
+      {mensaje && (
+        <div
+          className={`alert alert-${mensaje.tipo} text-center fw-semibold`}
+          role="alert"
+        >
+          {mensaje.texto}
+        </div>
+      )}
 
       {/* Formulario */}
       <div className="card shadow p-4 mb-4">

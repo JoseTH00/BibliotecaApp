@@ -6,22 +6,28 @@ export default function SociosPage() {
   const [formData, setFormData] = useState({
     nombre: "",
     dni: "",
-    numeroSocio: "",
     email: "",
     telefono: "",
   });
   const [editando, setEditando] = useState(false);
   const [socioEditado, setSocioEditado] = useState(null);
+  const [mensaje, setMensaje] = useState(null); // { tipo: 'success' | 'danger' | 'warning', texto: '' }
 
   useEffect(() => {
     cargarSocios();
   }, []);
+
+  const mostrarMensaje = (texto, tipo = "info") => {
+    setMensaje({ texto, tipo });
+    setTimeout(() => setMensaje(null), 5000); 
+  };
 
   const cargarSocios = async () => {
     try {
       const res = await api.get("socios");
       setSocios(res.data);
     } catch (error) {
+      mostrarMensaje("Error al cargar socios", "danger");
       console.error("Error al cargar socios:", error);
     }
   };
@@ -35,14 +41,15 @@ export default function SociosPage() {
     try {
       if (editando) {
         await api.put(`socios/${socioEditado.idSocio}`, formData);
+        mostrarMensaje("Socio actualizado correctamente ✅", "success");
       } else {
         await api.post("socios", formData);
+        mostrarMensaje("Socio registrado correctamente ✅", "success");
       }
 
       setFormData({
         nombre: "",
         dni: "",
-        numeroSocio: "",
         email: "",
         telefono: "",
       });
@@ -50,8 +57,10 @@ export default function SociosPage() {
       setSocioEditado(null);
       cargarSocios();
     } catch (error) {
-      alert("Error al guardar el socio");
-      console.error(error);
+      const texto =
+        error.response?.data?.error || "Error inesperado al guardar el socio";
+      mostrarMensaje(texto, "danger");
+      console.error("Error en guardar socio:", error);
     }
   };
 
@@ -61,7 +70,6 @@ export default function SociosPage() {
     setFormData({
       nombre: socio.nombre,
       dni: socio.dni,
-      numeroSocio: socio.numeroSocio,
       email: socio.email,
       telefono: socio.telefono,
     });
@@ -71,10 +79,13 @@ export default function SociosPage() {
     if (window.confirm("¿Seguro que deseas eliminar este socio?")) {
       try {
         await api.delete(`socios/${id}`);
+        mostrarMensaje("Socio eliminado correctamente 🗑️", "warning");
         cargarSocios();
       } catch (error) {
-        alert("Error al eliminar el socio");
-        console.error(error);
+        const texto =
+          error.response?.data?.error || "Error al eliminar el socio";
+        mostrarMensaje(texto, "danger");
+        console.error("Error al eliminar socio:", error);
       }
     }
   };
@@ -85,15 +96,25 @@ export default function SociosPage() {
     setFormData({
       nombre: "",
       dni: "",
-      numeroSocio: "",
       email: "",
       telefono: "",
     });
+    mostrarMensaje("Edición cancelada", "secondary");
   };
 
   return (
     <div className="container py-4">
       <h2 className="mb-4 text-center">👥 Gestión de Socios</h2>
+
+      {/* Mensaje dinámico */}
+      {mensaje && (
+        <div
+          className={`alert alert-${mensaje.tipo} text-center fw-semibold`}
+          role="alert"
+        >
+          {mensaje.texto}
+        </div>
+      )}
 
       {/* Formulario */}
       <div className="card shadow p-4 mb-4">
@@ -124,17 +145,6 @@ export default function SociosPage() {
             />
           </div>
           <div className="col-md-4">
-            <label className="form-label">Número de Socio</label>
-            <input
-              type="text"
-              name="numeroSocio"
-              className="form-control"
-              value={formData.numeroSocio}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="col-md-6">
             <label className="form-label">Email</label>
             <input
               type="email"
@@ -144,7 +154,7 @@ export default function SociosPage() {
               onChange={handleChange}
             />
           </div>
-          <div className="col-md-6">
+          <div className="col-md-4">
             <label className="form-label">Teléfono</label>
             <input
               type="text"
@@ -197,7 +207,11 @@ export default function SociosPage() {
                     <td>{socio.idSocio}</td>
                     <td>{socio.nombre}</td>
                     <td>{socio.dni}</td>
-                    <td>{socio.numeroSocio}</td>
+                    <td>
+                      <span className="badge bg-info text-dark">
+                        {socio.numeroSocio}
+                      </span>
+                    </td>
                     <td>{socio.email || "-"}</td>
                     <td>{socio.telefono || "-"}</td>
                     <td>

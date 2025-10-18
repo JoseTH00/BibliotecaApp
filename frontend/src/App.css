@@ -108,9 +108,27 @@ main {
   justify-content: center;
 }
 
-/* --- Quitar margen extra del body --- */
-body {
+/* Elimina espacio en blanco debajo del footer */
+html, body {
   margin: 0;
   padding: 0;
-  overflow-y: hidden; /* evita que aparezca el scroll */
+  height: 100%;
+  background-color: #fff; /* asegura fondo uniforme */
+}
+
+/* Evita que haya espacio adicional bajo el footer */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  flex: 1;
+}
+
+/* Asegura que el footer esté al final sin dejar espacio debajo */
+footer {
+  position: static;
+  margin-bottom: 0;
+  padding-bottom: 3rem;
 }
