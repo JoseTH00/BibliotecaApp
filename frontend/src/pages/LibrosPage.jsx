@@ -6,9 +6,10 @@ export default function LibrosPage() {
   const [formData, setFormData] = useState({ titulo: "", autor: "", isbn: "" });
   const [editando, setEditando] = useState(false);
   const [libroEditado, setLibroEditado] = useState(null);
-  const [mensaje, setMensaje] = useState(null); // { tipo, texto }
+  const [mensaje, setMensaje] = useState(null);
+  const [busqueda, setBusqueda] = useState(""); // 🔍 nuevo estado
+  const [timeoutId, setTimeoutId] = useState(null); // ⏱️ debounce
 
-  // Cargar libros al iniciar
   useEffect(() => {
     cargarLibros();
   }, []);
@@ -26,6 +27,37 @@ export default function LibrosPage() {
       mostrarMensaje("Error al cargar libros", "danger");
       console.error("Error al cargar libros:", error);
     }
+  };
+
+  // 🔍 Buscar libros (por título, autor o ISBN)
+  const buscarLibros = async (texto) => {
+    try {
+      const res = await api.get(
+        `libros/buscar?search=${encodeURIComponent(texto)}`
+      );
+      setLibros(res.data);
+    } catch (error) {
+      mostrarMensaje("Error al buscar libros", "danger");
+      console.error("Error al buscar libros:", error);
+    }
+  };
+
+  // 🧠 Manejar input de búsqueda con debounce
+  const handleBusqueda = (e) => {
+    const valor = e.target.value;
+    setBusqueda(valor);
+
+    if (timeoutId) clearTimeout(timeoutId);
+
+    const nuevoTimeout = setTimeout(() => {
+      if (valor.trim() === "") {
+        cargarLibros();
+      } else {
+        buscarLibros(valor);
+      }
+    }, 500);
+
+    setTimeoutId(nuevoTimeout);
   };
 
   const handleChange = (e) => {
@@ -160,7 +192,19 @@ export default function LibrosPage() {
 
       {/* Listado */}
       <div className="card shadow p-4">
-        <h5 className="mb-3">📖 Lista de Libros</h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="m-0">📖 Lista de Libros</h5>
+
+          {/* 🔍 Input de búsqueda */}
+          <input
+            type="text"
+            className="form-control w-50"
+            placeholder="Buscar por título, autor o ISBN..."
+            value={busqueda}
+            onChange={handleBusqueda}
+          />
+        </div>
+
         {libros.length === 0 ? (
           <p className="text-muted">No hay libros registrados.</p>
         ) : (

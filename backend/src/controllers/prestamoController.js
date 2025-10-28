@@ -9,6 +9,16 @@ export const obtenerPrestamos = async (req, res) => {
   }
 };
 
+export const buscarPrestamos = async (req, res) => {
+  try {
+    const { search } = req.query;
+    const prestamos = await PrestamoService.buscarPrestamos(search);
+    res.json(prestamos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const crearPrestamo = async (req, res) => {
   try {
     const prestamo = await PrestamoService.crearPrestamo(req.body);

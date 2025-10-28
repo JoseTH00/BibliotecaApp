@@ -1,4 +1,5 @@
 import { Libro } from "../models/Libro.js";
+import { Op, fn, col, where } from "sequelize";
 
 export const crearLibro = async (data) => {
   const { titulo, autor, isbn } = data;
@@ -13,6 +14,40 @@ export const crearLibro = async (data) => {
   if (existente) throw new Error("Ya existe un libro con ese ISBN");
 
   return await Libro.create({ titulo, autor, isbn, estado: "DISPONIBLE" });
+};
+
+export const buscarLibros = async (search) => {
+  if (!search || search.trim() === "") {
+    return await Libro.findAll();
+  }
+
+  const texto = search.toLowerCase();
+
+  // normalizamos el término para ISBN (quitamos guiones y espacios)
+  const textoIsbn = texto.replace(/[-\s]/g, "");
+
+  // construimos una expresión REPLACE anidada para comparar ISBN sin guiones/espacios
+  const isbnNormalizado = fn(
+    "lower",
+    fn("replace",
+      fn("replace", col("isbn"), "-", ""),
+      " ",
+      ""
+    )
+  );
+
+  return await Libro.findAll({
+    where: {
+      [Op.or]: [
+        // titulo/autor case-insensitive
+        where(fn("lower", col("titulo")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("autor")), { [Op.like]: `%${texto}%` }),
+        // ISBN: comparamos el ISBN normalizado contra el texto normalizado
+        where(isbnNormalizado, { [Op.like]: `%${textoIsbn}%` }),
+      ],
+    },
+    order: [["idLibro", "ASC"]],
+  });
 };
 
 // Listar todos los libros

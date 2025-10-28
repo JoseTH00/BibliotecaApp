@@ -1,5 +1,35 @@
 import { RegistroMulta } from "../models/RegistroMulta.js";
 import { Socio } from "../models/Socio.js";
+import { Op, fn, col, where } from "sequelize";
+
+export const buscarMultas = async (search) => {
+  if (!search || search.trim() === "") {
+    return await RegistroMulta.findAll({
+      include: [
+        { model: Socio, attributes: ["idSocio", "nombre", "dni", "email"] },
+      ],
+      order: [["idMulta", "ASC"]],
+    });
+  }
+
+  const texto = search.toLowerCase();
+
+  return await RegistroMulta.findAll({
+    include: [
+      { model: Socio, attributes: ["idSocio", "nombre", "dni", "email"], required: false },
+    ],
+    where: {
+      [Op.or]: [
+        where(fn("lower", col("Socio.nombre")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("Socio.dni")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("Socio.email")), { [Op.like]: `%${texto}%` }),
+      ],
+    },
+    raw: true,
+    nest: true,
+    order: [["idMulta", "ASC"]],
+  });
+};
 
 export const obtenerMultas = async () => {
   return await RegistroMulta.findAll({

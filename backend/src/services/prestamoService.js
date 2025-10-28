@@ -1,6 +1,40 @@
 import { Prestamo } from "../models/Prestamo.js";
 import { Socio } from "../models/Socio.js";
 import { Libro } from "../models/Libro.js";
+import { Op, fn, col, where } from "sequelize";
+
+// 🔍 Buscar préstamos por datos de socio o libro
+export const buscarPrestamos = async (search) => {
+  if (!search || search.trim() === "") {
+    return await Prestamo.findAll({
+      include: [
+        { model: Socio, attributes: ["idSocio", "nombre", "dni"] },
+        { model: Libro, attributes: ["idLibro", "titulo", "autor"] },
+      ],
+      order: [["idPrestamo", "ASC"]],
+    });
+  }
+
+  const texto = search.toLowerCase();
+
+  return await Prestamo.findAll({
+    include: [
+      { model: Socio, attributes: ["idSocio", "nombre", "dni"], required: false },
+      { model: Libro, attributes: ["idLibro", "titulo", "autor"], required: false },
+    ],
+    where: {
+      [Op.or]: [
+        where(fn("lower", col("Socio.nombre")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("Socio.dni")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("Libro.titulo")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("Libro.autor")), { [Op.like]: `%${texto}%` }),
+      ],
+    },
+    raw: true,
+    nest: true,
+    order: [["idPrestamo", "ASC"]],
+  });
+};
 
 // Obtener préstamos activos
 export const obtenerPrestamos = async () => {

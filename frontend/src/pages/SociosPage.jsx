@@ -11,7 +11,9 @@ export default function SociosPage() {
   });
   const [editando, setEditando] = useState(false);
   const [socioEditado, setSocioEditado] = useState(null);
-  const [mensaje, setMensaje] = useState(null); // { tipo: 'success' | 'danger' | 'warning', texto: '' }
+  const [mensaje, setMensaje] = useState(null);
+  const [busqueda, setBusqueda] = useState(""); // 🔍 nuevo estado
+  const [timeoutId, setTimeoutId] = useState(null); // ⏱️ para debounce
 
   useEffect(() => {
     cargarSocios();
@@ -19,7 +21,7 @@ export default function SociosPage() {
 
   const mostrarMensaje = (texto, tipo = "info") => {
     setMensaje({ texto, tipo });
-    setTimeout(() => setMensaje(null), 5000); 
+    setTimeout(() => setMensaje(null), 5000);
   };
 
   const cargarSocios = async () => {
@@ -30,6 +32,37 @@ export default function SociosPage() {
       mostrarMensaje("Error al cargar socios", "danger");
       console.error("Error al cargar socios:", error);
     }
+  };
+
+  // 🔍 Buscar socios por nombre, DNI o correo
+  const buscarSocios = async (texto) => {
+    try {
+      const res = await api.get(
+        `socios/buscar?search=${encodeURIComponent(texto)}`
+      );
+      setSocios(res.data);
+    } catch (error) {
+      mostrarMensaje("Error en la búsqueda de socios", "danger");
+      console.error("Error al buscar socios:", error);
+    }
+  };
+
+  // 🧠 Manejar input de búsqueda con debounce
+  const handleBusqueda = (e) => {
+    const valor = e.target.value;
+    setBusqueda(valor);
+
+    if (timeoutId) clearTimeout(timeoutId);
+
+    const nuevoTimeout = setTimeout(() => {
+      if (valor.trim() === "") {
+        cargarSocios();
+      } else {
+        buscarSocios(valor);
+      }
+    }, 500); // espera medio segundo
+
+    setTimeoutId(nuevoTimeout);
   };
 
   const handleChange = (e) => {
@@ -184,7 +217,19 @@ export default function SociosPage() {
 
       {/* Listado */}
       <div className="card shadow p-4">
-        <h5 className="mb-3">📋 Lista de Socios</h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="m-0">📋 Lista de Socios</h5>
+
+          {/* 🔍 Input de búsqueda */}
+          <input
+            type="text"
+            className="form-control w-50"
+            placeholder="Buscar por nombre, DNI o correo..."
+            value={busqueda}
+            onChange={handleBusqueda}
+          />
+        </div>
+
         {socios.length === 0 ? (
           <p className="text-muted">No hay socios registrados.</p>
         ) : (

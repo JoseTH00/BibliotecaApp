@@ -1,4 +1,25 @@
 import { Socio } from "../models/Socio.js";
+import { Op, fn, col, where } from "sequelize";
+
+// 🔍 Buscar socios por nombre, DNI o correo (búsqueda parcial y case-insensitive)
+export const buscarSocios = async (search) => {
+  if (!search || search.trim() === "") {
+    return await Socio.findAll(); // si no se pasa nada, devuelve todos
+  }
+
+  const texto = search.toLowerCase();
+
+  return await Socio.findAll({
+    where: {
+      [Op.or]: [
+        where(fn("lower", col("nombre")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("dni")), { [Op.like]: `%${texto}%` }),
+        where(fn("lower", col("email")), { [Op.like]: `%${texto}%` }),
+      ],
+    },
+    order: [["idSocio", "ASC"]],
+  });
+};
 
 // Crear socio (sin pedir número de socio manualmente)
 export const registrarSocio = async (datos) => {

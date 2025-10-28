@@ -9,6 +9,16 @@ export const getMultas = async (req, res) => {
   }
 };
 
+export const buscarMultas = async (req, res) => {
+  try {
+    const { search } = req.query;
+    const multas = await MultaService.buscarMultas(search);
+    res.json(multas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const crearMulta = async (req, res) => {
   try {
     const multa = await MultaService.crearMulta(req.body);

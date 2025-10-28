@@ -21,6 +21,17 @@ export const getLibroById = async (req, res) => {
   }
 };
 
+// 🔍 Buscar libros (título, autor o ISBN)
+export const buscarLibros = async (req, res) => {
+  try {
+    const { search } = req.query;
+    const libros = await LibroService.buscarLibros(search);
+    res.json(libros);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Crear un nuevo libro
 export const crearLibro = async (req, res) => {
   try {

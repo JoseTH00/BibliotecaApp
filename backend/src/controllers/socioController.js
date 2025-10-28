@@ -1,5 +1,16 @@
 import * as SocioService from "../services/socioService.js";
 
+// 🔍 Buscar socios
+export const buscarSocios = async (req, res) => {
+  try {
+    const { search } = req.query;
+    const socios = await SocioService.buscarSocios(search);
+    res.json(socios);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Obtener todos los socios
 export const getSocios = async (req, res) => {
   try {
