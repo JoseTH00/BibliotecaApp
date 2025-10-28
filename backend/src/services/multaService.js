@@ -10,19 +10,20 @@ export const obtenerMultas = async () => {
 };
 
 export const crearMulta = async ({ idSocio, motivo, monto, fecha }) => {
-  if (!idSocio || !motivo || !monto || !fecha) {
-    throw new Error("Datos incompletos para registrar la multa");
-  }
+  if (!idSocio || !motivo || !monto || !fecha) throw new Error("Datos incompletos");
 
-  const multa = await RegistroMulta.create({
+  if (parseFloat(monto) <= 0) throw new Error("El monto debe ser mayor a 0"); // ✅ validación
+
+  const socio = await Socio.findByPk(idSocio);
+  if (!socio) throw new Error("Socio no encontrado"); // ✅ validación
+
+  return await RegistroMulta.create({
     idSocio,
     motivo,
     monto: parseFloat(monto),
     fecha,
-    estado: "ACTIVA", // 🔹 también corregido aquí
+    estado: "ACTIVA",
   });
-
-  return multa;
 };
 
 export const cancelarMulta = async (idMulta) => {

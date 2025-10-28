@@ -15,9 +15,29 @@ export const obtenerPrestamos = async () => {
 
 // Crear préstamo
 export const crearPrestamo = async ({ idLibro, idSocio, fechaInicio, fechaDevolucion }) => {
+  if (!idLibro || !idSocio || !fechaInicio || !fechaDevolucion)
+    throw new Error("Datos incompletos");
+
+  const hoy = new Date();
+  const inicio = new Date(fechaInicio);
+  const devolucion = new Date(fechaDevolucion);
+
+  // ✅ Validar que fechaInicio no sea anterior a hoy
+  if (inicio < new Date(hoy.toDateString())) {
+    throw new Error("La fecha de inicio no puede ser anterior a la fecha actual");
+  }
+
+  // ✅ Validar que la devolución sea posterior al inicio
+  if (inicio >= devolucion) {
+    throw new Error("La fecha de devolución debe ser posterior a la de inicio");
+  }
+
   const libro = await Libro.findByPk(idLibro);
   if (!libro) throw new Error("Libro no encontrado");
   if (libro.estado === "PRESTADO") throw new Error("El libro no está disponible");
+
+  const socio = await Socio.findByPk(idSocio);
+  if (!socio) throw new Error("Socio no encontrado");
 
   const prestamo = await Prestamo.create({
     idLibro,

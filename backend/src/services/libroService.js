@@ -1,20 +1,18 @@
 import { Libro } from "../models/Libro.js";
 
-// Crear libro
 export const crearLibro = async (data) => {
   const { titulo, autor, isbn } = data;
-  if (!titulo || !autor || !isbn) throw new Error("Datos incompletos");
+
+  if (!titulo || !autor || !isbn) throw new Error("Todos los campos son obligatorios");
+
+  if (!/^(97(8|9)[-\s]?)?\d{1,5}[-\s]?\d{1,7}[-\s]?\d{1,7}[-\s]?(\d|X)$/.test(isbn)) {
+  throw new Error("ISBN inválido (usa formato ISBN-10 o ISBN-13, con o sin guiones)");
+  }
 
   const existente = await Libro.findOne({ where: { isbn } });
   if (existente) throw new Error("Ya existe un libro con ese ISBN");
 
-  const nuevoLibro = await Libro.create({
-    titulo,
-    autor,
-    isbn,
-    estado: "DISPONIBLE"
-  });
-  return nuevoLibro;
+  return await Libro.create({ titulo, autor, isbn, estado: "DISPONIBLE" });
 };
 
 // Listar todos los libros
@@ -33,6 +31,15 @@ export const obtenerLibroPorId = async (id) => {
 export const actualizarLibro = async (id, datos) => {
   const libro = await Libro.findByPk(id);
   if (!libro) throw new Error("Libro no encontrado");
+  
+  if (datos.isbn && !/^(97(8|9)[-\s]?)?\d{1,5}[-\s]?\d{1,7}[-\s]?\d{1,7}[-\s]?(\d|X)$/.test(datos.isbn)) {
+    throw new Error("ISBN inválido (usa formato ISBN-10 o ISBN-13, con o sin guiones)");
+  }
+  
+  if (datos.isbn) {
+    datos.isbn = datos.isbn.replace(/[-\s]/g, "");
+  }
+
   await libro.update(datos);
   return libro;
 };
