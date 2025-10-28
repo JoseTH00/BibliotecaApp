@@ -124,7 +124,6 @@ export default function PrestamosPage() {
             <table className="table table-striped align-middle">
               <thead className="table-primary">
                 <tr>
-                  <th>ID</th>
                   <th>Socio</th>
                   <th>Libro</th>
                   <th>Fecha Inicio</th>
@@ -135,7 +134,6 @@ export default function PrestamosPage() {
               <tbody>
                 {prestamos.map((p) => (
                   <tr key={p.idPrestamo}>
-                    <td>{p.idPrestamo}</td>
                     <td>{p.Socio?.nombre}</td>
                     <td>{p.Libro?.titulo}</td>
                     <td>{p.fechaInicio}</td>

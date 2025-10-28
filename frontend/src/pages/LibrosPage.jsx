@@ -168,7 +168,6 @@ export default function LibrosPage() {
             <table className="table table-striped align-middle">
               <thead className="table-primary">
                 <tr>
-                  <th>ID</th>
                   <th>Título</th>
                   <th>Autor</th>
                   <th>ISBN</th>
@@ -179,7 +178,6 @@ export default function LibrosPage() {
               <tbody>
                 {libros.map((libro) => (
                   <tr key={libro.idLibro}>
-                    <td>{libro.idLibro}</td>
                     <td>{libro.titulo}</td>
                     <td>{libro.autor}</td>
                     <td>{libro.isbn}</td>

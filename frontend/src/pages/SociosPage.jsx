@@ -192,7 +192,6 @@ export default function SociosPage() {
             <table className="table table-striped align-middle">
               <thead className="table-primary">
                 <tr>
-                  <th>ID</th>
                   <th>Nombre</th>
                   <th>DNI</th>
                   <th>Número Socio</th>
@@ -204,7 +203,6 @@ export default function SociosPage() {
               <tbody>
                 {socios.map((socio) => (
                   <tr key={socio.idSocio}>
-                    <td>{socio.idSocio}</td>
                     <td>{socio.nombre}</td>
                     <td>{socio.dni}</td>
                     <td>

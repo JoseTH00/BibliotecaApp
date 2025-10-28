@@ -155,7 +155,6 @@ export default function MultasPage() {
             <table className="table table-striped align-middle">
               <thead className="table-danger">
                 <tr>
-                  <th>ID</th>
                   <th>Socio</th>
                   <th>Motivo</th>
                   <th>Monto</th>
@@ -167,7 +166,6 @@ export default function MultasPage() {
               <tbody>
                 {multas.map((m) => (
                   <tr key={m.idMulta}>
-                    <td>{m.idMulta}</td>
                     <td>{m.Socio?.nombre}</td>
                     <td>{m.motivo}</td>
                     <td>${parseFloat(m.monto).toFixed(2)}</td>
